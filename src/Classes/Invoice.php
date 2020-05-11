@@ -273,7 +273,7 @@ class Invoice
      * @return int
      */
     public function discountPriceFormatted(){
-        return number_format($this->subTotalPrice() - $this->discountPrice(), $this->decimals);
+        return number_format($this->discountPrice(), $this->decimals);
     }
 
     /**
@@ -382,6 +382,10 @@ class Invoice
     public function subTotalPriceFormatted()
     {
         return number_format($this->subTotalPrice(), $this->decimals);
+    }
+
+    public function priceFormatted($id){
+        return number_format($this->items[$id]['price'], $this->decimals);
     }
 
     /**
@@ -522,3 +526,4 @@ class Invoice
         }
     }
 }
+
