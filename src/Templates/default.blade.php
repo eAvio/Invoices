@@ -284,7 +284,7 @@
                                     <b>TOTAL</b>
                                 </td>
                                 <td>
-                                    <b>{{ $invoice->discountPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</b>
+                                    <b>{{ $invoice->subTotalPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</b>
                                 </td>
                             </tr>
                     </tbody>
