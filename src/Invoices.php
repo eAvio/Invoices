@@ -251,7 +251,6 @@ class Invoice
 			$value += $this->vatPrice($price * $ammount, $vat);
 			$this->vats[1][$key] = $value;
 		}
-        Log::debug($price);
         return $this;
     }
 
@@ -263,7 +262,7 @@ class Invoice
      * @return float
      */
     public function discountPrice(){
-        return bcsub($this->subTotalPrice(), $this->subTotalPrice() * (100-$this->discount) / 100);
+        return bcsub($this->subTotalPrice(), $this->subTotalPrice() * (100.00 - $this->discount) / 100.00, 2);
     }
 
     /**
@@ -328,6 +327,10 @@ class Invoice
         });
     }
 
+    public function noVatPriceFormatted(){
+        return number_format($this->noVatPrice(), $this->decimals);
+    }
+
     /**
      * Pop the last invoice item.
      *
@@ -382,7 +385,7 @@ class Invoice
      */
     public function subTotalPriceFormatted()
     {
-        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice()), $this->decimals);
+        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice(), 2), $this->decimals);
     }
 
     public function priceFormatted($id){
