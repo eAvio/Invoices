@@ -8,10 +8,11 @@ use Carbon\Carbon;
 use eavio\invoices\Traits\Setters;
 use Illuminate\Support\Collection;
 use Storage;
+use Illuminate\Support\Facades\Log;
 
 
 //This is the Invoice class.
-class Invoices
+class Invoice
 {
     use Setters;
 
@@ -233,7 +234,7 @@ class Invoices
 			'unit'       => $unit,
             'ammount'    => $ammount,
 			'vat'		 => $vat,
-            'totalPrice' => number_format(($price * $ammount) + $this->vatPrice(bcmul($price, $ammount, $this->decimals), $vat), $this->decimals),
+            'totalPrice' => number_format(($price * $ammount) + $this->vatPrice(bcmul($price, $ammount, $this->decimals), $vat), $this->decimals) ,
             'id'         => $id,
             'imageUrl'   => $imageUrl,
         ]));
@@ -243,7 +244,6 @@ class Invoices
 			array_push($this->vats[0], $vat);
 			array_push($this->vats[1], $this->vatPrice($price * $ammount, $vat));
 		}
-
          // Else if the vat isn't 0, finds the index of the vat percentage and adds the value of the current vat into the found index field
 		else if($vat != 0){
 			$key = array_search($vat, $this->vats[0]);
@@ -262,7 +262,7 @@ class Invoices
      * @return float
      */
     public function discountPrice(){
-        return $this->subTotalPrice() * (100-$this->discount) / 100;
+        return bcsub($this->subTotalPrice(), $this->subTotalPrice() * (100.00 - $this->discount) / 100.00, 2);
     }
 
     /**
@@ -327,6 +327,10 @@ class Invoices
         });
     }
 
+    public function noVatPriceFormatted(){
+        return number_format($this->noVatPrice(), $this->decimals);
+    }
+
     /**
      * Pop the last invoice item.
      *
@@ -359,7 +363,7 @@ class Invoices
     /**
      * Return the subtotal invoice price.
      *
-     * @method subTotalPrice
+     * @method 
      *
      * @return int
      */
@@ -381,7 +385,7 @@ class Invoices
      */
     public function subTotalPriceFormatted()
     {
-        return number_format($this->subTotalPrice(), $this->decimals);
+        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice(), 2), $this->decimals);
     }
 
     public function priceFormatted($id){
@@ -397,7 +401,7 @@ class Invoices
      */
     private function totalPrice()
     {
-        return bcadd($this->discountPrice(), $this->taxPrice(), $this->decimals);
+        return bcsub($this->taxPrice(), $this->discountPrice(), $this->decimals);
     }
 
     /**
@@ -504,6 +508,7 @@ class Invoices
      */
     public function show($name = 'invoice')
     {
+        Log::debug(Array($this));
         $this->generate();
 
         return $this->pdf->stream($name, ['Attachment' => false]);
