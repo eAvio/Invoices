@@ -2,16 +2,17 @@
 
 //This file is part of eavio/invoices.
 
-namespace eavio\invoices\Classes;
+namespace eavio\invoices\src;
 
 use Carbon\Carbon;
 use eavio\invoices\Traits\Setters;
 use Illuminate\Support\Collection;
 use Storage;
+use Illuminate\Support\ServiceProvider;
 
 
 //This is the Invoice class.
-class Invoice
+class Invoices extends ServiceProvider
 {
     use Setters;
 
