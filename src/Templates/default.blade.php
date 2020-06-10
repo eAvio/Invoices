@@ -100,10 +100,7 @@
             box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
         }
 
-        .img-rounded {
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
+        .header {
             position: absolute;
             top: -50px;
             left: -45px;
@@ -111,14 +108,16 @@
             height: 150px;
         }
 
+        .header-img{
+            width:100%;
+            height:100%;
+        }
+
         .header4 {
             margin-top: 10px;
         }
 
         .footer {
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
             position: absolute;
             bottom: -45px;
             left: -45px;
@@ -128,8 +127,8 @@
         }
 
         .footer-img {
-            width: 818px;
-            height: 100px;
+            width: 100%;
+            height: 100%;
         }
 
         #vat {
@@ -174,7 +173,7 @@
 
 <body>
     <header>
-        <div class="img-rounded" style="background-image : url('{{ $invoice->logo }}')"></div>
+        <div class="header"><img  class="header-img" src="{{ $invoice->logo }}"></img></div>
     </header>
     <main>
         <div style="clear:both; position:relative;">
@@ -257,7 +256,7 @@
                     <tbody>
                         <tr>
                             <td><b>Subtotal</b></td>
-                            <td>{{ $invoice->noVatPrice() }} {{ $invoice->formatCurrency()->symbol }}</td>
+                            <td>{{ $invoice->noVatPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</td>
                         </tr>
                         @for($i = 0; $i < count($invoice->vats[0]); $i++)
                             <tr>
@@ -299,7 +298,7 @@
         @endif
 
         @if ($invoice->footer_logo)
-        <div class="footer" style="background-image : url('{{ $invoice->footer_logo }}')"></div>
+        <div class="footer"><img class='footer-img' src="{{ $invoice->footer_logo }}"></img></div>
         @endif
 
     </main>
