@@ -227,10 +227,7 @@ class Invoice
      */
 
     public function addItem($name, $price, $unit, $ammount = 1, $vat, $id = '-', $discount = 0, $imageUrl = null)
-    {
-        // $total_discounted_price = ($price * $ammount) * ($discount);
-        $disc = 1 - $discount / 100;
-        
+    {   
         $this->items->push(Collection::make([
             'name'       => $name,
             'price'      => $price,
@@ -238,7 +235,7 @@ class Invoice
             'ammount'    => $ammount,
             'discount'   => $discount,
             'vat'        => $vat,
-            'totalPrice' => number_format(($price * $ammount * $disc) + $this->vatPrice(bcmul($price, $ammount, $this->decimals), $vat), $this->decimals),
+            'totalPrice' => number_format(($price * $ammount * (1 - $discount / 100)) + $this->vatPrice(bcmul($price, $ammount, $this->decimals), $vat), $this->decimals),
             'id'         => $id,
             'imageUrl'   => $imageUrl,
         ]));
@@ -332,7 +329,7 @@ class Invoice
     public function noVatPrice()
     {
         return $this->items->sum(function ($item) {
-            return ($item['price'] * $item['ammount'] * $item['discount']);
+            return ($item['price'] * $item['ammount'] * (1 - $item['discount'] / 100));
         });
     }
 
@@ -380,11 +377,9 @@ class Invoice
     private function subTotalPrice()
     {
         return $this->items->sum(function ($item) {
-            return ($item['price'] * $item['ammount'] * $item['discount']) + $this->vatPrice(bcmul($item['price'], $item['ammount'], $this->decimals), $item['vat']);
+            return ($item['price'] * $item['ammount'] * (1 - $item['discount'] / 100)) + $this->vatPrice(bcmul($item['price'], $item['ammount'], $this->decimals), $item['vat']);
         });
     }
-
-
 
     /**
      * Return formatted sub total price.
@@ -402,7 +397,6 @@ class Invoice
     {
         return number_format($this->items[$id]['price'], $this->decimals);
     }
-
 
     /**
      * Return the total invoce price after aplying the tax.
