@@ -21,7 +21,7 @@ class Invoice
      *
      * @var int
      */
-    public $discount = null;
+    public $discount_value;
     /**
      * Invoice name.
      *
@@ -172,7 +172,7 @@ class Invoice
         $this->due_date = config('invoices.due_date') != null ? Carbon::parse(config('invoices.due_date')) : null;
         $this->with_pagination = config('invoices.with_pagination');
         $this->duplicate_header = config('invoices.duplicate_header');
-        $this->discount = 0;
+        $this->discount_value = 0;
         $this->date_of_service = config('invoices.date_of_service');
         $this->footer_logo = config('invoices.footer_logo');
         $this->tax_number = config('invoices.tax_number');
@@ -226,8 +226,8 @@ class Invoice
      * @return self
      */
 
-    public function addItem($name, $price, $unit, $ammount = 1, $vat, $id = '-', $discount = 0, $imageUrl = null)
-    {   
+    public function addItem($name, $price, $unit, $ammount = 1, $vat, $discount = 0, $id = '-', $imageUrl = null)
+    {
         $this->items->push(Collection::make([
             'name'       => $name,
             'price'      => $price,
@@ -235,7 +235,7 @@ class Invoice
             'ammount'    => $ammount,
             'discount'   => $discount,
             'vat'        => $vat,
-            'totalPrice' => number_format(($price * $ammount * (1 - $discount / 100)) + $this->vatPrice(bcmul($price, $ammount, $this->decimals), $vat), $this->decimals),
+            'totalPrice' => number_format(($price * $ammount * (1 - $discount)) + $this->vatPrice(($price * $ammount * (1 - $discount)), $vat), $this->decimals),
             'id'         => $id,
             'imageUrl'   => $imageUrl,
         ]));
@@ -243,15 +243,18 @@ class Invoice
         // Saves the vats (without duplicates) into an array with the vat percentage if the vat percentage is not a duplicate
         if (!in_array($vat, $this->vats[0]) and $vat != 0) {
             array_push($this->vats[0], $vat);
-            array_push($this->vats[1], $this->vatPrice($price * $ammount, $vat));
+            array_push($this->vats[1], $this->vatPrice($price * $ammount * (1 - $discount), $vat));
         }
         // Else if the vat isn't 0, finds the index of the vat percentage and adds the value of the current vat into the found index field
         else if ($vat != 0) {
             $key = array_search($vat, $this->vats[0]);
             $value = $this->vats[1][$key];
-            $value += $this->vatPrice($price * $ammount, $vat);
+            $value += $this->vatPrice($price * $ammount * (1 - $discount), $vat);
             $this->vats[1][$key] = $value;
         }
+
+        $this->discount_value += $price * $ammount * $discount;
+        
         return $this;
     }
 
@@ -264,7 +267,8 @@ class Invoice
      */
     public function discountPrice()
     {
-        return bcsub($this->subTotalPrice(), $this->subTotalPrice() * (100.00 - $this->discount) / 100.00, 2);
+        return $this->discount_value;
+        // return bcsub($this->subTotalPrice(), $this->subTotalPrice() * (100.00 - $this->discount) / 100.00, 2);
     }
 
     /**
@@ -329,7 +333,7 @@ class Invoice
     public function noVatPrice()
     {
         return $this->items->sum(function ($item) {
-            return ($item['price'] * $item['ammount'] * (1 - $item['discount'] / 100));
+            return ($item['price'] * $item['ammount'] * (1 - $item['discount']));
         });
     }
 
@@ -377,7 +381,7 @@ class Invoice
     private function subTotalPrice()
     {
         return $this->items->sum(function ($item) {
-            return ($item['price'] * $item['ammount'] * (1 - $item['discount'] / 100)) + $this->vatPrice(bcmul($item['price'], $item['ammount'], $this->decimals), $item['vat']);
+            return ($item['price'] * $item['ammount']) + $this->vatPrice(($item['price'] * $item['ammount']), $item['vat']);
         });
     }
 
@@ -396,6 +400,11 @@ class Invoice
     public function priceFormatted($id)
     {
         return number_format($this->items[$id]['price'], $this->decimals);
+    }
+
+    public function discountValue($id)
+    {
+        return number_format($this->items[$id]['discount'] * 100, $this->decimals);
     }
 
     /**
@@ -514,7 +523,6 @@ class Invoice
      */
     public function show($name = 'invoice')
     {
-        Log::debug(array($this));
         $this->generate();
 
         return $this->pdf->stream($name, ['Attachment' => false]);

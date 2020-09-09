@@ -107,6 +107,10 @@
             width: 820px;
             height: 150px;
         }
+        .header-img{
+            width:100%;
+            height:100%;
+        }
 
         .header-img{
             width:100%;
@@ -125,7 +129,6 @@
             width: 820px;
             margin-top: 0;
         }
-
         .footer-img {
             width: 100%;
             height: 100%;
@@ -213,12 +216,12 @@
                     <th>Image</th>
                     @endif
                     <th>Item Name</th>
-                    <th>ID</th>
                     <th>Amount</th>
                     <th>Unit</th>
                     <th>Price</th>
+                    <th>Discount</th>
                     <th>VAT</th>
-                    <th>Total</th>
+                    <th>Total (inc. VAT)</th>
                 </tr>
             </thead>
             <tbody>
@@ -229,10 +232,10 @@
                     <td>@if(!is_null($item->get('imageUrl'))) <img src="{{ url($item->get('imageUrl')) }}" />@endif</td>
                     @endif
                     <td>{{ $item->get('name') }}</td>
-                    <td>{{ $item->get('id') }}</td>
                     <td>{{ $item->get('ammount') }}</td>
                     <td>{{ $item->get('unit') }}</td>
                     <td>{{ $invoice->priceFormatted($key) }} {{ $invoice->formatCurrency()->symbol }}</td>
+                    <td>{{ $invoice->discountValue($key) }}%</td>
                     <td>{{ $item->get('vat') }}%</td>
                     <td>{{ $item->get('totalPrice') }} {{ $invoice->formatCurrency()->symbol }}</td>
                 </tr>
@@ -255,7 +258,7 @@
                 <table class="table table-bordered">
                     <tbody>
                         <tr>
-                            <td><b>Subtotal</b></td>
+                            <td><b>Subtotal (exc. VAT)</b></td>
                             <td>{{ $invoice->noVatPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</td>
                         </tr>
                         @for($i = 0; $i < count($invoice->vats[0]); $i++)
@@ -270,14 +273,6 @@
                                 </td>
                             </tr>
                             @endfor
-                            <tr>
-                                <td>
-                                    <b>Discount</b>
-                                </td>
-                                <td>
-                                    {{ $invoice->discount }}% ({{ $invoice->discountPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }})
-                                </td>
-                            </tr>
                             <tr>
                                 <td>
                                     <b>TOTAL</b>
