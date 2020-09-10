@@ -142,13 +142,13 @@
             padding: 5px;
             border-radius: 5px;
             opacity: 0.8;
-            width: 110px;
+            width: 125px;
             text-align: center;
         }
 
         #vat_number {
             position: absolute;
-            right: 15px;
+            right: 12px;
             /* left: 200px; */
             font-size: 8px;
             opacity: 0.8;
@@ -181,28 +181,28 @@
     <main>
         <div style="clear:both; position:relative;">
             <div style="position: relative; top: -30px; left:0pt; width:250pt;">
-                <h4 class="header4">Customer Details:</h4>
+                <h4 class="header4">{{__('invoice.customer_details')}}</h4>
                 <div class="panel panel-default">
                     <div id="customer-details" class="panel-body">
                         {!! $invoice->customer_details->count() == 0 ? '<i>No customer details</i><br />' : '' !!}
                         {!! nl2br(e($invoice->customer_details->get('address'))) !!}
 
                         @if($invoice->customer_details->get('vat_payer') == 1)
-                        <p id="vat">Taxable person: <b>NO</b></p>
+                        <p id="vat">{{__('invoice.is_taxable')}} <b>{{__('invoice.no')}}</b></p>
                         @elseif($invoice->customer_details->get('vat_payer') == 0)
-                        <p id="vat">Taxable person: <b>YES</b></p>
-                        <p id="vat_number">Tax number: {{ $invoice->tax_number }}</p>
+                        <p id="vat">{{__('invoice.is_taxable')}} <b>{{__('invoice.yes')}}</b></p>
+                        <p id="vat_number">{{__('invoice.tax_number')}} {{ $invoice->tax_number }}</p>
                         @endif
                     </div>
                 </div>
             </div>
             <div style="text-align: right; margin-left: 300pt; right: 10px; position: absolute; top: 0px;">
-                <b>Date Issued: </b>{{ $invoice->date->formatLocalized('%d %B %Y') }}<br />
+                <b>{{__('invoice.date_issued')}} </b>{{ $invoice->date->isoFormat('DD.MM.YYYY') }}<br />
                 @if ($invoice->due_date)
-                <b>Due Date: </b>{{ $invoice->due_date->formatLocalized('%d %B %Y') }}<br />
+                <b>{{__('invoice.due_date')}} </b>{{ $invoice->due_date->isoFormat('DD.MM.YYYY') }}<br />
                 @endif
                 @if ($invoice->date_of_service)
-                <b>Date of Service: </b>{{ $invoice->date_of_service }}<br />
+                <b>{{__('invoice.date_of_service')}} </b>{{ $invoice->date_of_service->isoFormat('DD.MM.YYYY') }}<br />
                 @endif
                 <br />
             </div>
@@ -212,25 +212,19 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    @if($invoice->shouldDisplayImageColumn())
-                    <th>Image</th>
-                    @endif
-                    <th>Item Name</th>
-                    <th>Amount</th>
-                    <th>Unit</th>
-                    <th>Price</th>
-                    <th>Discount</th>
-                    <th>VAT</th>
-                    <th>Total (inc. VAT)</th>
+                    <th>{{__('invoice.item_name')}}</th>
+                    <th>{{__('invoice.amount')}}</th>
+                    <th>{{__('invoice.unit')}}</th>
+                    <th>{{__('invoice.price')}}</th>
+                    <th>{{__('invoice.discount')}}</th>
+                    <th>{{__('invoice.vat')}}</th>
+                    <th>{{__('invoice.total_with_vat')}}</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($invoice->items as $key => $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    @if($invoice->shouldDisplayImageColumn())
-                    <td>@if(!is_null($item->get('imageUrl'))) <img src="{{ url($item->get('imageUrl')) }}" />@endif</td>
-                    @endif
                     <td>{{ $item->get('name') }}</td>
                     <td>{{ $item->get('ammount') }}</td>
                     <td>{{ $item->get('unit') }}</td>
@@ -245,7 +239,7 @@
         <div style="clear:both; position: relative; margin-bottom: 50px;">
             @if($invoice->notes)
             <div style="position:absolute; left:0pt; width:250pt; page-break-inside: avoid;">
-                <h4>Notes:</h4>
+                <h4>{{__('invoice.notes')}}</h4>
                 <div class="panel panel-default">
                     <div class="panel-body">
                         {!! nl2br(e($invoice->notes)) !!}
@@ -254,11 +248,11 @@
             </div>
             @endif
             <div style="margin-left: 300pt; page-break-inside: avoid;">
-                <h4>Total:</h4>
+                <h4>{{__('invoice.total_table_title')}}</h4>
                 <table class="table table-bordered">
                     <tbody>
                         <tr>
-                            <td><b>Subtotal (exc. VAT)</b></td>
+                            <td><b>{{__('invoice.subtotal')}}</b></td>
                             <td>{{ $invoice->noVatPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</td>
                         </tr>
                         @for($i = 0; $i < count($invoice->vats[0]); $i++)
@@ -275,7 +269,7 @@
                             @endfor
                             <tr>
                                 <td>
-                                    <b>TOTAL</b>
+                                    <b>{{__('invoice.total')}}</b>
                                 </td>
                                 <td>
                                     <b>{{ $invoice->subTotalPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</b>

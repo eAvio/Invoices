@@ -254,7 +254,10 @@ class Invoice
         }
 
         $this->discount_value += $price * $ammount * $discount;
-        
+        \Log::debug($price);
+        \Log::debug($ammount);
+        \Log::debug($discount);
+        \Log::debug($this->discount_value);
         return $this;
     }
 
@@ -267,6 +270,7 @@ class Invoice
      */
     public function discountPrice()
     {
+        \Log::debug($this->discount_value);
         return $this->discount_value;
         // return bcsub($this->subTotalPrice(), $this->subTotalPrice() * (100.00 - $this->discount) / 100.00, 2);
     }
@@ -523,6 +527,7 @@ class Invoice
      */
     public function show($name = 'invoice')
     {
+        Log::debug(array($this));
         $this->generate();
 
         return $this->pdf->stream($name, ['Attachment' => false]);
