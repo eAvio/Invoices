@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use eavio\invoices\Traits\Setters;
 use Illuminate\Support\Collection;
 use Storage;
+use Illuminate\Support\Facades\Log;
 
 
 //This is the Invoice class.
@@ -20,13 +21,29 @@ class Invoice
      *
      * @var int
      */
-	public $discount = null;
+    public $discount_value;
+
     /**
      * Invoice name.
      *
      * @var string
      */
     public $name;
+
+
+    /**
+     * Invoice has_units.
+     *
+     * @var string
+     */
+    public $has_units;
+
+    /**
+     * Invoice type.
+     *
+     * @var string
+     */
+    public $type;
 
     /**
      * Invoice template.
@@ -154,9 +171,10 @@ class Invoice
      *
      * @param string $name
      */
-    public function __construct($name = 'Invoice')
+    public function __construct($name = 'Invoice', $type = 'invoice')
     {
         $this->name = $name;
+        $this->type = $type;
         $this->template = 'default';
         $this->items = Collection::make([]);
         $this->currency = config('invoices.currency');
@@ -171,11 +189,12 @@ class Invoice
         $this->due_date = config('invoices.due_date') != null ? Carbon::parse(config('invoices.due_date')) : null;
         $this->with_pagination = config('invoices.with_pagination');
         $this->duplicate_header = config('invoices.duplicate_header');
-		$this->discount = 0;
-		$this->date_of_service = config('invoices.date_of_service');
-		$this->footer_logo = config('invoices.footer_logo');
-		$this->tax_number = config('invoices.tax_number');
-		$this->vats = Array(Array(),Array());
+        $this->has_services = false;
+        $this->discount_value = 0;
+        $this->date_of_service = config('invoices.date_of_service');
+        $this->footer_logo = config('invoices.footer_logo');
+        $this->tax_number = config('invoices.tax_number');
+        $this->vats = array(array(), array());
     }
 
     /**
@@ -225,32 +244,39 @@ class Invoice
      * @return self
      */
 
-    public function addItem($name, $price, $unit, $ammount = 1, $vat, $id = '-', $imageUrl = null)
+    public function addItem($name, $price, $unit, $ammount = 1, $vat, $discount = 0, $id = '-', $imageUrl = null)
     {
         $this->items->push(Collection::make([
             'name'       => $name,
             'price'      => $price,
-			'unit'       => $unit,
+            'unit'       => $unit,
             'ammount'    => $ammount,
-			'vat'		 => $vat,
-            'totalPrice' => number_format(($price * $ammount) + $this->vatPrice(bcmul($price, $ammount, $this->decimals), $vat), $this->decimals),
+            'discount'   => $discount,
+            'vat'        => $vat,
+            'totalPrice' => number_format(($price * $ammount * (1 - $discount)) + $this->vatPrice(($price * $ammount * (1 - $discount)), $vat), $this->decimals),
             'id'         => $id,
             'imageUrl'   => $imageUrl,
         ]));
 
-         // Saves the vats (without duplicates) into an array with the vat percentage if the vat percentage is not a duplicate
-		if(!in_array($vat, $this->vats[0]) and $vat != 0){
-			array_push($this->vats[0], $vat);
-			array_push($this->vats[1], $this->vatPrice($price * $ammount, $vat));
-		}
+        // Saves the vats (without duplicates) into an array with the vat percentage if the vat percentage is not a duplicate
+        if (!in_array($vat, $this->vats[0]) and $vat != 0) {
+            array_push($this->vats[0], $vat);
+            array_push($this->vats[1], $this->vatPrice($price * $ammount * (1 - $discount), $vat));
+        }
+        // Else if the vat isn't 0, finds the index of the vat percentage and adds the value of the current vat into the found index field
+        else if ($vat != 0) {
+            $key = array_search($vat, $this->vats[0]);
+            $value = $this->vats[1][$key];
+            $value += $this->vatPrice($price * $ammount * (1 - $discount), $vat);
+            $this->vats[1][$key] = $value;
+        }
 
-         // Else if the vat isn't 0, finds the index of the vat percentage and adds the value of the current vat into the found index field
-		else if($vat != 0){
-			$key = array_search($vat, $this->vats[0]);
-			$value = $this->vats[1][$key];
-			$value += $this->vatPrice($price * $ammount, $vat);
-			$this->vats[1][$key] = $value;
-		}
+        $this->discount_value += $price * $ammount * $discount;
+
+        if ($this->has_units == false && $unit != null) {
+            $this->has_units = true;
+        }
+
         return $this;
     }
 
@@ -261,8 +287,10 @@ class Invoice
      *
      * @return float
      */
-    public function discountPrice(){
-        return $this->subTotalPrice() * (100-$this->discount) / 100;
+    public function discountPrice()
+    {
+        return $this->discount_value;
+        // return bcsub($this->subTotalPrice(), $this->subTotalPrice() * (100.00 - $this->discount) / 100.00, 2);
     }
 
     /**
@@ -272,7 +300,8 @@ class Invoice
      *
      * @return int
      */
-    public function discountPriceFormatted(){
+    public function discountPriceFormatted()
+    {
         return number_format($this->discountPrice(), $this->decimals);
     }
 
@@ -283,8 +312,9 @@ class Invoice
      *
      * @return float
      */
-    public function vatPrice($price, $percentage){
-        return ($percentage/100) * $price;
+    public function vatPrice($price, $percentage)
+    {
+        return ($percentage / 100) * $price;
     }
 
     /**
@@ -296,7 +326,8 @@ class Invoice
      *
      * @return int
      */
-    public function getVat($id){
+    public function getVat($id)
+    {
         return $this->vats[0][$id];
     }
 
@@ -309,7 +340,8 @@ class Invoice
      *
      * @return int
      */
-    public function getVatValue($id){
+    public function getVatValue($id)
+    {
         return number_format($this->vats[1][$id], $this->decimals);
     }
 
@@ -323,8 +355,13 @@ class Invoice
     public function noVatPrice()
     {
         return $this->items->sum(function ($item) {
-            return ($item['price'] * $item['ammount']);
+            return ($item['price'] * $item['ammount'] * (1 - $item['discount']));
         });
+    }
+
+    public function noVatPriceFormatted()
+    {
+        return number_format($this->noVatPrice(), $this->decimals);
     }
 
     /**
@@ -350,7 +387,7 @@ class Invoice
      */
     public function formatCurrency()
     {
-        $currencies = json_decode(file_get_contents(__DIR__.'/../Currencies.json'));
+        $currencies = json_decode(file_get_contents(__DIR__ . '/../Currencies.json'));
         $currency = $this->currency;
 
         return $currencies->$currency;
@@ -359,18 +396,16 @@ class Invoice
     /**
      * Return the subtotal invoice price.
      *
-     * @method subTotalPrice
+     * @method 
      *
      * @return int
      */
     private function subTotalPrice()
     {
         return $this->items->sum(function ($item) {
-            return ($item['price'] * $item['ammount']) + $this->vatPrice(bcmul($item['price'], $item['ammount'], $this->decimals), $item['vat']);
+            return ($item['price'] * $item['ammount']) + $this->vatPrice(($item['price'] * $item['ammount']), $item['vat']);
         });
     }
-
-
 
     /**
      * Return formatted sub total price.
@@ -381,11 +416,17 @@ class Invoice
      */
     public function subTotalPriceFormatted()
     {
-        return number_format($this->subTotalPrice(), $this->decimals);
+        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice(), 2), $this->decimals);
     }
 
-    public function priceFormatted($id){
+    public function priceFormatted($id)
+    {
         return number_format($this->items[$id]['price'], $this->decimals);
+    }
+
+    public function discountValue($id)
+    {
+        return number_format($this->items[$id]['discount'] * 100, $this->decimals);
     }
 
     /**
@@ -397,7 +438,7 @@ class Invoice
      */
     private function totalPrice()
     {
-        return bcadd($this->discountPrice(), $this->taxPrice(), $this->decimals);
+        return bcsub($this->taxPrice(), $this->discountPrice(), $this->decimals);
     }
 
     /**
@@ -423,7 +464,7 @@ class Invoice
     {
         if (is_null($tax_rate)) {
             $tax_total = 0;
-            foreach($this->tax_rates as $taxe){
+            foreach ($this->tax_rates as $taxe) {
                 if ($taxe['tax_type'] == 'percentage') {
                     $tax_total += bcdiv(bcmul($taxe['tax'], $this->subTotalPrice(), $this->decimals), 100, $this->decimals);
                     continue;
@@ -519,11 +560,10 @@ class Invoice
      */
     public function shouldDisplayImageColumn()
     {
-        foreach($this->items as $item){
-            if($item['imageUrl'] != null){
+        foreach ($this->items as $item) {
+            if ($item['imageUrl'] != null) {
                 return true;
             }
         }
     }
 }
-

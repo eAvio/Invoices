@@ -1,12 +1,13 @@
 <?php
+
 /**
-  * This file is part of consoletvs/invoices.
-  *
-  * (c) Erik Campobadal <soc@erik.cat>
-  *
-  * For the full copyright and license information, please view the LICENSE
-  * file that was distributed with this source code.
-  */
+ * This file is part of consoletvs/invoices.
+ *
+ * (c) Erik Campobadal <soc@erik.cat>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace eavio\invoices\Traits;
 
@@ -20,7 +21,7 @@ use Illuminate\Support\Collection;
  */
 trait Setters
 {
-	/**
+    /**
      * Set the invoice discount.
      *
      * @method discount
@@ -29,56 +30,60 @@ trait Setters
      *
      * @return self
      */
-	public function discount($discount){
-		$this->discount = $discount;
+    public function discount($discount)
+    {
+        $this->discount = $discount;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Set the invoice footer logo.
-	 *
-	 * @method footer_logo
-	 *
-	 * @param string $footer_logo
-	 *
-	 * @return self
-	 */
-	public function footer_logo($footer_logo){
-		$this->footer_logo = $footer_logo;
+    /**
+     * Set the invoice footer logo.
+     *
+     * @method footer_logo
+     *
+     * @param string $footer_logo
+     *
+     * @return self
+     */
+    public function footer_logo($footer_logo)
+    {
+        $this->footer_logo = $footer_logo;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Set the invoice date of service.
-	 *
-	 * @method date_of_service
-	 *
-	 * @param Carbon $date_of_service
-	 *
-	 * @return self
-	 */
-	public function date_of_service($date_of_service){
-		$this->date_of_service = $date_of_service;
+    /**
+     * Set the invoice date of service.
+     *
+     * @method date_of_service
+     *
+     * @param Carbon $date_of_service
+     *
+     * @return self
+     */
+    public function date_of_service($date_of_service)
+    {
+        $this->date_of_service = $date_of_service;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Set the invoice tax number.
-	 *
-	 * @method tax_number
-	 *
-	 * @param string $tax_number
-	 *
-	 * @return self
-	 */
-	public function tax_number($tax_number){
-		$this->tax_number = $tax_number;
+    /**
+     * Set the invoice tax number.
+     *
+     * @method tax_number
+     *
+     * @param string $tax_number
+     *
+     * @return self
+     */
+    public function tax_number($tax_number)
+    {
+        $this->tax_number = $tax_number;
 
-		return $this;
-	}
+        return $this;
+    }
 
     /**
      * Set the invoice name.
@@ -92,6 +97,39 @@ trait Setters
     public function name($name)
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+
+    /**
+     * Set the invoice has_units.
+     *
+     * @method has_units
+     *
+     * @param string $has_units
+     *
+     * @return self
+     */
+    public function has_units($has_units)
+    {
+        $this->has_units = $has_units;
+
+        return $this;
+    }
+
+    /**
+     * Set the invoice type.
+     *
+     * @method type
+     *
+     * @param string $type
+     *
+     * @return self
+     */
+    public function type($type)
+    {
+        $this->type = $type;
 
         return $this;
     }
@@ -284,7 +322,4 @@ trait Setters
         $this->duplicate_header = $duplicate_header;
         return $this;
     }
-
-
-
 }
