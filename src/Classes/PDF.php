@@ -39,8 +39,10 @@ class PDF
                 'allow_self_signed'=> true,
             ],
         ]);
-
         $pdf->setHttpContext($context);
+        
+        $pdf->set_paper('A4', 'portrait');
+
 
         $GLOBALS['with_pagination'] = $invoice->with_pagination;
 

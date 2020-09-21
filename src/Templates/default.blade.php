@@ -122,6 +122,16 @@
             height: 100%;
         }
 
+        .header-img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .header-img {
+            width: 100%;
+            height: 100%;
+        }
+
         .header4 {
             margin-top: 10px;
         }
@@ -148,6 +158,7 @@
             padding: 5px 10px;
             border-radius: 5px;
             opacity: 0.8;
+            width: 125px;
             text-align: center;
         }
 
