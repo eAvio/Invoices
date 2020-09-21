@@ -36,17 +36,17 @@ class PDF
             'ssl' => [
                 'verify_peer'      => false,
                 'verify_peer_name' => false,
-                'allow_self_signed'=> true,
+                'allow_self_signed' => true,
             ],
         ]);
         $pdf->setHttpContext($context);
-        
+
         $pdf->set_paper('A4', 'portrait');
 
 
         $GLOBALS['with_pagination'] = $invoice->with_pagination;
 
-        $pdf->loadHtml(View::make('invoices::'.$template, ['invoice' => $invoice]));
+        $pdf->loadHtml(View::make('invoices::' . $template, ['invoice' => $invoice]));
         $pdf->render();
 
         return $pdf;

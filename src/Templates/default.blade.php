@@ -90,18 +90,14 @@
         }
 
         .well {
-            padding: 10px;
+            min-height: 20px;
+            padding: 19px;
             margin-bottom: 20px;
             background-color: #f5f5f5;
             border: 1px solid #e3e3e3;
-            border-radius: 2px;
-        }
-
-        .no-tax {
-            margin: 20px 0;
-            color: rgba(0, 0, 0, .6);
-            position: absolute;
-            bottom: 35px;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
         }
 
         .header {
@@ -122,23 +118,13 @@
             height: 100%;
         }
 
-        .header-img {
-            width: 100%;
-            height: 100%;
-        }
-
-        .header-img {
-            width: 100%;
-            height: 100%;
-        }
-
         .header4 {
             margin-top: 10px;
         }
 
-        footer {
-            position: fixed;
-            bottom: 20px;
+        .footer {
+            position: absolute;
+            bottom: -45px;
             left: -45px;
             height: 100px;
             width: 820px;
@@ -152,24 +138,25 @@
 
         #vat {
             float: right;
-            top: 0px;
+            top: -15px;
             position: absolute;
             border: 1px solid lightgrey;
-            padding: 5px 10px;
+            padding: 5px;
             border-radius: 5px;
             opacity: 0.8;
             width: 125px;
             text-align: center;
         }
 
-        /* #vat_number {
+        #vat_number {
             position: absolute;
             right: 12px;
+            /* left: 200px; */
             font-size: 8px;
             opacity: 0.8;
             padding: 5px;
             margin: 0;
-        } */
+        }
 
         #invoice-title {
             font-weight: normal;
@@ -179,16 +166,10 @@
     <style>
         @page {
             margin-top: 200px;
-            margin-bottom: 80px;
         }
 
         header {
             top: -150px;
-            position: fixed;
-        }
-
-        footer {
-            bottom: -80px;
             position: fixed;
         }
     </style>
@@ -197,34 +178,29 @@
 
 <body>
     <header>
-        <div class="header">
-            <img class="header-img" src="{{ $invoice->logo }}"></img>
-        </div>
+        <div class="header"><img class="header-img" src="{{ $invoice->logo }}"></img></div>
     </header>
-
-    @if ($invoice->footer_logo)
-    <footer>
-        <img class='footer-img' src="{{ $invoice->footer_logo }}"></img>
-    </footer>
-    @endif
     <main>
         <div style="clear:both; position:relative;">
             <div style="position: relative; top: -30px; left:0pt; width:250pt;">
                 <h4 class="header4">{{__('invoice.customer_details')}}</h4>
                 <div class="panel panel-default">
                     <div id="customer-details" class="panel-body">
-                        {!! $invoice->customer_details->count() == 0 ? '<i>N/A</i><br />' : '' !!}
+                        {!! $invoice->customer_details->count() == 0 ? '<i>No customer details</i><br />' : '' !!}
                         {!! nl2br(e($invoice->customer_details->get('address'))) !!}
 
-                        @if($invoice->tax_number)
-                        <p id="vat">{{__('invoice.tax_number')}} <b>{{ $invoice->tax_number }}</b></p>
+                        @if($invoice->customer_details->get('vat_payer') == 1)
+                        <p id="vat">{{__('invoice.is_taxable')}} <b>{{__('invoice.no')}}</b></p>
+                        @elseif($invoice->customer_details->get('vat_payer') == 0)
+                        <p id="vat">{{__('invoice.is_taxable')}} <b>{{__('invoice.yes')}}</b></p>
+                        <p id="vat_number">{{__('invoice.tax_number')}} {{ $invoice->tax_number }}</p>
                         @endif
                     </div>
                 </div>
             </div>
             <div style="text-align: right; margin-left: 300pt; right: 10px; position: absolute; top: 0px;">
                 <b>{{__('invoice.date_issued')}} </b>{{ $invoice->date->isoFormat('DD.MM.YYYY') }}<br />
-                @if ($invoice->due_date != null)
+                @if ($invoice->due_date)
                 <b>{{__('invoice.due_date')}} </b>{{ $invoice->due_date->isoFormat('DD.MM.YYYY') }}<br />
                 @endif
                 @if ($invoice->date_of_service)
@@ -240,9 +216,7 @@
                     <th>#</th>
                     <th>{{__('invoice.item_name')}}</th>
                     <th>{{__('invoice.amount')}}</th>
-                    @if ($invoice->has_units)
                     <th>{{__('invoice.unit')}}</th>
-                    @endif
                     <th>{{__('invoice.price')}}</th>
                     <th>{{__('invoice.discount')}}</th>
                     <th>{{__('invoice.vat')}}</th>
@@ -255,9 +229,7 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item->get('name') }}</td>
                     <td>{{ $item->get('ammount') }}</td>
-                    @if ($invoice->has_units)
                     <td>{{ $item->get('unit') }}</td>
-                    @endif
                     <td>{{ $invoice->priceFormatted($key) }} {{ $invoice->formatCurrency()->symbol }}</td>
                     <td>{{ $invoice->discountValue($key) }}%</td>
                     <td>{{ $item->get('vat') }}%</td>
@@ -281,17 +253,15 @@
                 <h4>{{__('invoice.total_table_title')}}</h4>
                 <table class="table table-bordered">
                     <tbody>
-                        @if(count($invoice->vats[0])>0)
                         <tr>
                             <td><b>{{__('invoice.subtotal')}}</b></td>
                             <td>{{ $invoice->noVatPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</td>
                         </tr>
-                        @endif
                         @for($i = 0; $i < count($invoice->vats[0]); $i++)
                             <tr>
                                 <td>
                                     <b>
-                                        {{__('invoice.vat')}} {{ $i + 1 . ': ' . $invoice->getVat($i) }}%
+                                        VAT {{ $i + 1 . ': ' . $invoice->getVat($i) }}%
                                     </b>
                                 </td>
                                 <td>
@@ -304,11 +274,7 @@
                                     <b>{{__('invoice.total')}}</b>
                                 </td>
                                 <td>
-                                    @if($invoice->type != 'invoice reversal')
                                     <b>{{ $invoice->subTotalPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</b>
-                                    @else
-                                    <b>-{{ $invoice->subTotalPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</b>
-                                    @endif
                                 </td>
                             </tr>
                     </tbody>
@@ -316,21 +282,14 @@
             </div>
         </div>
 
-
         @if ($invoice->footnote)
         <div class="well">
-            {!! ($invoice->footnote) !!}
+            {!! nl2br(e($invoice->footnote)) !!}
         </div>
         @endif
 
-        @if (count($invoice->vats[0]) == 0)
-        <div class="no-tax">
-            {{__('invoice.vat_not_accounted')}}
-        </div>
-        @elseif ((count($invoice->vats[0]) == 1 && $invoice->getVat(0) == 9.50) || (count($invoice->vats[0]) == 2 && $invoice->getVat(1) == 9.50 || $invoice->getVat(0) == 9.50))
-        <div class="no-tax">
-            {{__('invoice.vat_lower')}}
-        </div>
+        @if ($invoice->footer_logo)
+        <div class="footer"><img class='footer-img' src="{{ $invoice->footer_logo }}"></img></div>
         @endif
 
     </main>
