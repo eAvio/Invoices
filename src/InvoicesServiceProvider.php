@@ -2,12 +2,12 @@
 
 // This file is part of eavio/invoices.
 
-namespace eavio\invoices\src;
+namespace Eavio\Invoices;
 
 use Illuminate\Support\ServiceProvider;
 
 // This is the Invoices class.
-class Invoices extends ServiceProvider
+class InvoicesServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap any application services.
@@ -16,11 +16,11 @@ class Invoices extends ServiceProvider
      */
     public function boot()
     {
-        $this->loadViewsFrom(__DIR__.'/Templates', 'invoices');
+        $this->loadViewsFrom(__DIR__ . '/Templates', 'invoices');
 
         $this->publishes([
-            __DIR__.'/Templates'           => resource_path('views/vendor/invoices'),
-            __DIR__.'/Config/invoices.php' => config_path('invoices.php'),
+            __DIR__ . '/Templates'           => resource_path('views/vendor/invoices'),
+            __DIR__ . '/Config/invoices.php' => config_path('invoices.php'),
         ], 'invoices');
     }
 
@@ -32,7 +32,8 @@ class Invoices extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/Config/invoices.php', 'invoices'
+            __DIR__ . '/Config/invoices.php',
+            'invoices'
         );
     }
 }
