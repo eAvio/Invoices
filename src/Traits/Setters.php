@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace eavio\invoices\Traits;
+namespace Eavio\Invoices\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;

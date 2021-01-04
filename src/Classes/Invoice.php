@@ -2,13 +2,12 @@
 
 //This file is part of eavio/invoices.
 
-namespace eavio\invoices\Classes;
+namespace Eavio\Invoices\Classes;
 
 use Carbon\Carbon;
-use eavio\invoices\Traits\Setters;
+use Eavio\Invoices\Traits\Setters;
 use Illuminate\Support\Collection;
 use Storage;
-use Illuminate\Support\Facades\Log;
 
 
 //This is the Invoice class.

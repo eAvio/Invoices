@@ -2,7 +2,7 @@
 
 //This file is part of eavio/invoices.
 
-namespace eavio\invoices\Classes;
+namespace Eavio\Invoices\Classes;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
