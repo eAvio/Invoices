@@ -243,7 +243,7 @@ class Invoice
      * @return self
      */
 
-    public function addItem($name, $price, $unit, $ammount = 1, $vat, $discount = 0, $id = '-', $imageUrl = null)
+    public function addItem($name, $price, $unit, $ammount = 1, $vat = 0, $discount = 0, $id = '-', $imageUrl = null)
     {
         $this->items->push(Collection::make([
             'name'       => $name,
@@ -415,7 +415,7 @@ class Invoice
      */
     public function subTotalPriceFormatted()
     {
-        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice(), 2), $this->decimals);
+        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice(), 8), $this->decimals);
     }
 
     public function priceFormatted($id)
