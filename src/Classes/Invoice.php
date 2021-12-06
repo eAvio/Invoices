@@ -252,7 +252,7 @@ class Invoice
             'ammount'    => $ammount,
             'discount'   => $discount,
             'vat'        => $vat,
-            'totalPrice' => number_format(($price * $ammount * (1 - $discount)) + $this->vatPrice(($price * $ammount * (1 - $discount)), $vat), $this->decimals),
+            'totalPrice' => number_format(round(($price * $ammount * (1 - $discount)), 3) + $this->vatPrice(($price * $ammount * (1 - $discount)), $vat), $this->decimals),
             'id'         => $id,
             'imageUrl'   => $imageUrl,
         ]));
@@ -313,7 +313,7 @@ class Invoice
      */
     public function vatPrice($price, $percentage)
     {
-        return ($percentage / 100) * $price;
+        return round(($percentage / 100) * $price, 3);
     }
 
     /**
@@ -401,9 +401,9 @@ class Invoice
      */
     private function subTotalPrice()
     {
-        return $this->items->sum(function ($item) {
+        return round($this->items->sum(function ($item) {
             return ($item['price'] * $item['ammount']) + $this->vatPrice(($item['price'] * $item['ammount']), $item['vat']);
-        });
+        }), 3);
     }
 
     /**
@@ -415,7 +415,7 @@ class Invoice
      */
     public function subTotalPriceFormatted()
     {
-        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice(), 8), $this->decimals);
+        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice(), 4), $this->decimals);
     }
 
     public function priceFormatted($id)
