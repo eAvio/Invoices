@@ -194,6 +194,7 @@ class Invoice
         $this->footer_logo = config('invoices.footer_logo');
         $this->tax_number = config('invoices.tax_number');
         $this->vats = array(array(), array());
+        $this->section = null;
     }
 
     /**

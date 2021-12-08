@@ -135,6 +135,23 @@ trait Setters
     }
 
     /**
+     * Set the invoice type.
+     *
+     * @method type
+     *
+     * @param string $type
+     *
+     * @return self
+     */
+    public function section($section)
+    {
+        $this->section = $section;
+
+        return $this;
+    }
+
+
+    /**
      * Set the invoice number.
      *
      * @method number
