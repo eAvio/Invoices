@@ -403,7 +403,7 @@ class Invoice
     private function subTotalPrice()
     {
         return round($this->items->sum(function ($item) {
-            return ($item['price'] * $item['ammount']) + $this->vatPrice(($item['price'] * $item['ammount']), $item['vat']);
+            return ($item['price'] * $item['ammount']) + $this->vatPrice(($item['price'] * $item['ammount'] * (1 - $item['discount'])), $item['vat']);
         }), 3);
     }
 
