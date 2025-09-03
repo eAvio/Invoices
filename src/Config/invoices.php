@@ -1,5 +1,7 @@
 <?php
 
+use Carbon\Carbon;
+
 return [
 	/*
 	|--------------------------------------------------------------------------
@@ -124,7 +126,7 @@ return [
   | You can change it on each invoice individually.
   | You can set it null to remove the due date on all invoices.
   */
-  'due_date' => date('M dS ,Y',strtotime('+3 months')),
+  'due_date' => Carbon::now()->addMonths(3),
 
   /*
   | Default pagination parameter
