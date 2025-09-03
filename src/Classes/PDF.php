@@ -43,9 +43,6 @@ class PDF
 
         $pdf->set_paper('A4', 'portrait');
 
-
-        $GLOBALS['with_pagination'] = $invoice->with_pagination;
-
         $pdf->loadHtml(View::make('invoices::' . $template, ['invoice' => $invoice]));
         $pdf->render();
 

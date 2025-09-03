@@ -193,7 +193,7 @@ class Invoice
         $this->date_of_service = config('invoices.date_of_service');
         $this->footer_logo = config('invoices.footer_logo');
         $this->tax_number = config('invoices.tax_number');
-        $this->vats = array(array(), array());
+        $this->vat_list = Collection::make([]);
         $this->section = null;
     }
 
@@ -258,20 +258,8 @@ class Invoice
             'imageUrl'   => $imageUrl,
         ]));
 
-        // Saves the vats (without duplicates) into an array with the vat percentage if the vat percentage is not a duplicate
-        if (!in_array($vat, $this->vats[0]) and $vat != 0) {
-            array_push($this->vats[0], $vat);
-            array_push($this->vats[1], $this->vatPrice($price * $ammount * (1 - $discount), $vat));
-        }
-        // Else if the vat isn't 0, finds the index of the vat percentage and adds the value of the current vat into the found index field
-        else if ($vat != 0) {
-            $key = array_search($vat, $this->vats[0]);
-            $value = $this->vats[1][$key];
-            $value += $this->vatPrice($price * $ammount * (1 - $discount), $vat);
-            $this->vats[1][$key] = $value;
-        }
-
         $this->discount_value += $price * $ammount * $discount;
+        $this->calculateVats();
 
         if ($this->has_units == false && $unit != null) {
             $this->has_units = true;
@@ -318,31 +306,21 @@ class Invoice
     }
 
     /**
-     * Returns the VAT percentage for the specified index
+     * Recalculates the VAT list
      *
-     * @method getVat
+     * @method calculateVats
      *
-     * @param int $id
-     *
-     * @return int
+     * @return void
      */
-    public function getVat($id)
+    public function calculateVats()
     {
-        return $this->vats[0][$id];
-    }
-
-    /**
-     * Returns the VAT value for the specified index
-     *
-     * @method getVatValue
-     *
-     * @param int $id
-     *
-     * @return int
-     */
-    public function getVatValue($id)
-    {
-        return number_format($this->vats[1][$id], $this->decimals);
+        $this->vat_list = $this->items->groupBy('vat')->map(function ($group) {
+            return $group->reduce(function ($carry, $item) {
+                return $carry + $this->vatPrice($item['price'] * $item['ammount'] * (1 - $item['discount']), $item['vat']);
+            }, 0);
+        })->filter(function ($value, $key) {
+            return $key > 0;
+        });
     }
 
     /**
@@ -402,9 +380,14 @@ class Invoice
      */
     private function subTotalPrice()
     {
-        return round($this->items->sum(function ($item) {
-            return ($item['price'] * $item['ammount']) + $this->vatPrice(($item['price'] * $item['ammount'] * (1 - $item['discount'])), $item['vat']);
-        }), 3);
+        return $this->items->sum(function ($item) {
+            return $item['price'] * $item['ammount'];
+        });
+    }
+
+    private function totalVatAmount()
+    {
+        return $this->vat_list->sum();
     }
 
     /**
@@ -416,7 +399,7 @@ class Invoice
      */
     public function subTotalPriceFormatted()
     {
-        return number_format(bcsub($this->subTotalPrice(), $this->discountPrice(), 4), $this->decimals);
+        return number_format($this->noVatPrice(), $this->decimals);
     }
 
     public function priceFormatted($id)
@@ -438,7 +421,7 @@ class Invoice
      */
     private function totalPrice()
     {
-        return bcsub($this->taxPrice(), $this->discountPrice(), $this->decimals);
+        return $this->noVatPrice() + $this->totalVatAmount();
     }
 
     /**
@@ -451,42 +434,6 @@ class Invoice
     public function totalPriceFormatted()
     {
         return number_format($this->totalPrice(), $this->decimals);
-    }
-
-    /**
-     * taxPrice.
-     *
-     * @method taxPrice
-     *
-     * @return float
-     */
-    private function taxPrice(Object $tax_rate = null)
-    {
-        if (is_null($tax_rate)) {
-            $tax_total = 0;
-            foreach ($this->tax_rates as $taxe) {
-                if ($taxe['tax_type'] == 'percentage') {
-                    $tax_total += bcdiv(bcmul($taxe['tax'], $this->subTotalPrice(), $this->decimals), 100, $this->decimals);
-                    continue;
-                }
-                $tax_total += $taxe['tax'];
-            }
-            return $tax_total;
-        }
-
-        return bcdiv(bcmul($tax_rate->tax, $this->subTotalPrice(), $this->decimals), 100, $this->decimals);
-    }
-
-    /**
-     * Return formatted tax.
-     *
-     * @method taxPriceFormatted
-     *
-     * @return int
-     */
-    public function taxPriceFormatted($tax_rate)
-    {
-        return number_format($this->taxPrice($tax_rate), $this->decimals);
     }
 
     /**

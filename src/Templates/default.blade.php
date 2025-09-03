@@ -257,26 +257,26 @@
                             <td><b>{{__('invoice.subtotal')}}</b></td>
                             <td>{{ $invoice->noVatPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</td>
                         </tr>
-                        @for($i = 0; $i < count($invoice->vats[0]); $i++)
+                        @foreach ($invoice->vat_list as $vat => $value)
                             <tr>
                                 <td>
                                     <b>
-                                        VAT {{ $i + 1 . ': ' . $invoice->getVat($i) }}%
+                                        VAT {{ $vat }}%
                                     </b>
                                 </td>
                                 <td>
-                                    {{ $invoice->getVatValue($i) }} {{ $invoice->formatCurrency()->symbol }}
+                                    {{ number_format($value, $invoice->decimals) }} {{ $invoice->formatCurrency()->symbol }}
                                 </td>
                             </tr>
-                            @endfor
-                            <tr>
-                                <td>
-                                    <b>{{__('invoice.total')}}</b>
-                                </td>
-                                <td>
-                                    <b>{{ $invoice->subTotalPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</b>
-                                </td>
-                            </tr>
+                        @endforeach
+                        <tr>
+                            <td>
+                                <b>{{__('invoice.total')}}</b>
+                            </td>
+                            <td>
+                                    <b>{{ $invoice->totalPriceFormatted() }} {{ $invoice->formatCurrency()->symbol }}</b>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -296,11 +296,16 @@
 
     <!-- Page count -->
     <script type="text/php">
-        if (isset($pdf) && $GLOBALS['with_pagination']) {
-                $pageText = "{PAGE_NUM} of {PAGE_COUNT}";
-                $pdf->page_text(($pdf->get_width()/2) - (strlen($pageText) / 2), $pdf->get_height()-20, $pageText, $fontMetrics->get_font("DejaVu Sans, Arial, Helvetica, sans-serif", "normal"), 7, array(0,0,0));
-            }
-        </script>
+        if (isset($pdf) && $invoice->with_pagination) {
+            $text = "Page {PAGE_NUM} of {PAGE_COUNT}";
+            $font = $fontMetrics->get_font("DejaVu Sans, Arial, Helvetica, sans-serif", "normal");
+            $size = 7;
+            $width = $fontMetrics->get_text_width($text, $font, $size);
+            $x = ($pdf->get_width() - $width) / 2;
+            $y = $pdf->get_height() - 20;
+            $pdf->page_text($x, $y, $text, $font, $size);
+        }
+    </script>
 </body>
 
 </html>
